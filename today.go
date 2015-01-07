@@ -15,13 +15,25 @@ import (
 func main() {
 	//today := time.Now()
 
-	models.NewDatabase()
+	//models.NewDatabase()
 
 	app := cli.NewApp()
 	app.Name = "today"
 	app.Usage = "proactive and reactive daily achievements"
 
 	app.Commands = []cli.Command{
+		{
+			Name: "review",
+			Action: func(c *cli.Context) {
+				// May be a date?
+				argsWithoutFlags := c.Args()
+				entries := models.EntriesForToday()
+				fmt.Println("Got entries?", entries)
+				//entries := models.EntriesForToday()
+				//fmt.Println("Got entries? %v", entries)
+				fmt.Println(argsWithoutFlags)
+			},
+		},
 		{
 			Name: "must",
 			Action: func(c *cli.Context) {
