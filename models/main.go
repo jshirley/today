@@ -2,18 +2,20 @@ package models
 
 import (
 	"database/sql"
+	"path/filepath"
 	//"fmt"
 	"github.com/coopernurse/gorp"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
+	"os"
 	"time"
 )
 
 var dbMap = initDb()
 
 type Entry struct {
-	Id        int64 `db:"id"`
-	Created   int64 `db:"created_at"`
+	Id        int64  `db:"id"`
+	Created   string `db:"created_at"`
 	Category  string
 	Title     string
 	Note      string
@@ -37,7 +39,7 @@ func EntriesForDate(date string) []Entry {
 	var entries []Entry
 
 	log.Println("Fetching entries for ", date)
-	_, err := dbMap.Select(&entries, "SELECT * FROM entries WHERE DATE(created_at) = ?", date)
+	_, err := dbMap.Select(&entries, "SELECT * FROM entries WHERE DATE(created_at, 'localtime') = ?", date)
 	checkErr(err, "Unable to select entries")
 
 	log.Println("Got results? ", len(entries))
@@ -50,8 +52,28 @@ func EntriesForToday() []Entry {
 	return EntriesForDate(today.Format("2006-01-02"))
 }
 
+func AddEntryForToday(category string, entry string) {
+	entity := Entry{
+		Created:   time.Now().Format(time.RFC3339Nano),
+		Category:  category,
+		Title:     entry,
+		Note:      "",
+		Completed: false,
+		Sentiment: 0,
+	}
+
+	err := dbMap.Insert(&entity)
+	checkErr(err, "Unable to save entry for today")
+
+	log.Println("Saved entity into the database")
+}
+
+func dbFile() string {
+	return filepath.Join(os.Getenv("HOME"), ".today", "today_db.bin")
+}
+
 func initDb() *gorp.DbMap {
-	db, err := sql.Open("sqlite3", "/tmp/today_db.bin")
+	db, err := sql.Open("sqlite3", dbFile())
 	checkErr(err, "sql.Open failed!")
 
 	dbmap := &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}

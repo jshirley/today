@@ -6,6 +6,7 @@ import (
 	"github.com/codegangsta/cli"
 	"github.com/inconshreveable/axiom"
 	_ "github.com/mattn/go-sqlite3"
+	"strings"
 	//"log"
 	"os"
 	//"time"
@@ -38,8 +39,9 @@ func main() {
 			Name: "must",
 			Action: func(c *cli.Context) {
 				argsWithoutFlags := c.Args()
-				fmt.Println("must do stuff, can this take trailing arguments?")
-				fmt.Println(argsWithoutFlags)
+				if len(argsWithoutFlags) > 0 {
+					models.AddEntryForToday("must", strings.Join(argsWithoutFlags, " "))
+				}
 			},
 		},
 		{
