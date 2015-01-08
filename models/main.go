@@ -68,8 +68,14 @@ func AddEntryForToday(category string, entry string) {
 	log.Println("Saved entity into the database")
 }
 
+func appRoot() string {
+	root := filepath.Join(os.Getenv("HOME"), ".today")
+	os.Mkdir(root, 0776)
+	return root
+}
+
 func dbFile() string {
-	return filepath.Join(os.Getenv("HOME"), ".today", "today_db.bin")
+	return filepath.Join(appRoot(), "today_db.bin")
 }
 
 func initDb() *gorp.DbMap {
