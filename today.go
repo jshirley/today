@@ -22,6 +22,16 @@ func main() {
 	app.Name = "today"
 	app.Usage = "proactive and reactive daily achievements"
 
+	messageFlag := []cli.Flag{
+		/* TODO: What I'd love here is something that matches git's -m.
+		 * If `today did -m` then open $EDITOR, but if a string is set use that
+		 */
+		cli.BoolFlag{
+			Name:  "message, m",
+			Usage: "additional message to attach, markdown supported.",
+		},
+	}
+
 	app.Commands = []cli.Command{
 		{
 			Name: "review",
@@ -51,9 +61,28 @@ func main() {
 			},
 		},
 		{
-			Name: "did",
+			/*
+			* This action, called with no arguments, should display a list of all
+			* pending items for today. If no items exist, display a celebratory
+			* message.
+			* If additional trailing arguments are present, assume it is a new entry
+			* that is completed and record it as such.
+			*
+			* If the -m argument is specified, that is an additional message to append
+			 */
+			Name:  "did",
+			Flags: messageFlag,
 			Action: func(c *cli.Context) {
-				fmt.Println("should do stuff, can this take trailing arguments?")
+				argsWithoutFlags := c.Args()
+				if len(argsWithoutFlags) > 0 {
+					message := ""
+					fmt.Println("should do stuff, can this take trailing arguments?", strings.Join(argsWithoutFlags, " "))
+					if c.Bool("message") == true {
+						message = models.MessageFromEditor()
+					}
+					fmt.Println(message)
+					models.AddNoteForToday(strings.Join(argsWithoutFlags, " "), message)
+				}
 			},
 		},
 	}
@@ -61,15 +90,6 @@ func main() {
 	//axiom.WrapApp(app, axiom.NewMousetrap(), axiom.NewLogged())
 	axiom.WrapApp(app, axiom.NewLogged())
 
+	//TODO: add axiom.VersionCommand()
 	app.Run(os.Args)
-	/*
-		datePtr := flag.String("date", today.Format(time.RFC3339), "override today, defaults to… today.")
-
-		flag.Parse()
-
-		argsWithoutFlags := flag.Args()
-
-		fmt.Println("date: ", *datePtr)
-		fmt.Println("tail: ", argsWithoutFlags)
-	*/
 }

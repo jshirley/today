@@ -2,12 +2,14 @@ package models
 
 import (
 	"database/sql"
-	"path/filepath"
-	//"fmt"
+	"fmt"
 	"github.com/coopernurse/gorp"
 	_ "github.com/mattn/go-sqlite3"
+	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"time"
 )
 
@@ -23,8 +25,45 @@ type Entry struct {
 	Sentiment int64
 }
 
-func Hello() {
-	checkErr(nil, "Hello")
+type Note struct {
+	Id        int64  `db:"id"`
+	Created   string `db:"created_at"`
+	Title     string
+	Note      string
+	Sentiment int64
+}
+
+func MessageFromEditor() string {
+	file, err := ioutil.TempFile(os.TempDir(), "today-")
+	if err != nil {
+		fmt.Println("Error opening tempfile: ", err)
+		return ""
+	}
+
+	fmt.Println("Execute $EDITOR on ", file.Name())
+	fmt.Println(os.Getenv("EDITOR"))
+
+	cmd := exec.Command(os.Getenv("EDITOR"), file.Name())
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	err = cmd.Start()
+	if err != nil {
+		fmt.Println("Error starting editor command", err)
+		return ""
+	}
+
+	err = cmd.Wait()
+	if err != nil {
+		fmt.Println("Error waiting for editor", err)
+		return ""
+	}
+
+	message, err := ioutil.ReadFile(file.Name())
+	defer os.Remove(file.Name())
+
+	return string(message)
 }
 
 func NewDatabase() {
@@ -52,18 +91,45 @@ func EntriesForToday() []Entry {
 	return EntriesForDate(today.Format("2006-01-02"))
 }
 
-func AddEntryForToday(category string, entry string) {
-	entity := Entry{
+func CreateEntry(category string, entry string, note string, completed bool) Entry {
+	return Entry{
 		Created:   time.Now().Format(time.RFC3339Nano),
 		Category:  category,
 		Title:     entry,
-		Note:      "",
-		Completed: false,
+		Note:      note,
+		Completed: completed,
+		Sentiment: 0,
+	}
+}
+
+func AddEntryForToday(category string, entry string) {
+	entity := CreateEntry(category, entry, "", false)
+
+	err := dbMap.Insert(&entity)
+	checkErr(err, "Unable to save entry for today")
+
+	log.Println("Saved entity into the database")
+}
+
+func AddCompletedEntryForToday(category string, entry string, note string) {
+	entity := CreateEntry(category, entry, note, true)
+
+	err := dbMap.Insert(&entity)
+	checkErr(err, "Unable to save entry for today")
+
+	log.Println("Saved entity into the database")
+}
+
+func AddNoteForToday(title string, entry string) {
+	entity := Note{
+		Created:   time.Now().Format(time.RFC3339Nano),
+		Title:     title,
+		Note:      entry,
 		Sentiment: 0,
 	}
 
 	err := dbMap.Insert(&entity)
-	checkErr(err, "Unable to save entry for today")
+	checkErr(err, "Unable to save note for today")
 
 	log.Println("Saved entity into the database")
 }
@@ -85,6 +151,8 @@ func initDb() *gorp.DbMap {
 	dbmap := &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
 
 	dbmap.AddTableWithName(Entry{}, "entries").SetKeys(true, "Id")
+	dbmap.AddTableWithName(Note{}, "notes").SetKeys(true, "Id")
+
 	err = dbmap.CreateTablesIfNotExists()
 	checkErr(err, "Create tables failed")
 
