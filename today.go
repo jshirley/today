@@ -6,6 +6,7 @@ import (
 	"github.com/codegangsta/cli"
 	"github.com/inconshreveable/axiom"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/russross/blackfriday"
 	"strings"
 	//"log"
 	"os"
@@ -37,12 +38,19 @@ func main() {
 			Name: "review",
 			Action: func(c *cli.Context) {
 				// May be a date?
-				argsWithoutFlags := c.Args()
+				//argsWithoutFlags := c.Args()
 				entries := models.EntriesForToday()
 				fmt.Println("Got entries?", entries)
+
+				notes := models.NotesForToday()
+				for _, note := range notes {
+					fmt.Println(note.Title)
+					fmt.Println(string(blackfriday.MarkdownBasic([]byte(note.Note))))
+				}
+
 				//entries := models.EntriesForToday()
 				//fmt.Println("Got entries? %v", entries)
-				fmt.Println(argsWithoutFlags)
+				//fmt.Println(argsWithoutFlags)
 			},
 		},
 		{

@@ -91,6 +91,22 @@ func EntriesForToday() []Entry {
 	return EntriesForDate(today.Format("2006-01-02"))
 }
 
+func NotesForDate(date string) []Note {
+	var notes []Note
+
+	_, err := dbMap.Select(&notes, "SELECT * FROM notes WHERE DATE(created_at, 'localtime') = ?", date)
+	checkErr(err, "Unable to select notes")
+
+	log.Println("Got results? ", len(notes))
+
+	return notes
+}
+
+func NotesForToday() []Note {
+	today := time.Now()
+	return NotesForDate(today.Format("2006-01-02"))
+}
+
 func CreateEntry(category string, entry string, note string, completed bool) Entry {
 	return Entry{
 		Created:   time.Now().Format(time.RFC3339Nano),
