@@ -105,7 +105,7 @@ func main() {
 		{
 			Name: "server",
 			Action: func(c *cli.Context) {
-				server.Run()
+				server.RunTodayServer()
 			},
 		},
 	}
