@@ -11,6 +11,7 @@ import (
 	//"log"
 	"os"
 	//"time"
+	"github.com/jshirley/today/commands"
 	"github.com/jshirley/today/models"
 )
 
@@ -22,6 +23,9 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "today"
 	app.Usage = "proactive and reactive daily achievements"
+	app.Author = "Jay Shirley"
+	app.Email = "help@mustshouldwant.today"
+	app.Version = "0.1.0"
 
 	messageFlag := []cli.Flag{
 		/* TODO: What I'd love here is something that matches git's -m.
@@ -31,6 +35,10 @@ func main() {
 			Name:  "message, m",
 			Usage: "additional message to attach, markdown supported.",
 		},
+	}
+
+	app.Action = func(c *cli.Context) {
+		commands.DisplayReview()
 	}
 
 	app.Commands = []cli.Command{
