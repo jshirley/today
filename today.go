@@ -13,6 +13,7 @@ import (
 	//"time"
 	"github.com/jshirley/today/commands"
 	"github.com/jshirley/today/models"
+	"github.com/jshirley/today/server"
 )
 
 func main() {
@@ -99,6 +100,12 @@ func main() {
 					fmt.Println(message)
 					models.AddNoteForToday(strings.Join(argsWithoutFlags, " "), message)
 				}
+			},
+		},
+		{
+			Name: "server",
+			Action: func(c *cli.Context) {
+				server.Run()
 			},
 		},
 	}
