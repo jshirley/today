@@ -47,6 +47,8 @@ func buildApiService(router martini.Router) http.Handler {
 	router.Get("/bundle.js", func() string { return "console.log('hello');" })
 
 	m := martini.New()
+
+  m.Use(martini.Static("public"))
 	m.Action(router.Handle)
 
 	return m
