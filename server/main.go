@@ -10,9 +10,9 @@ import (
 	log "gopkg.in/inconshreveable/log15.v2"
 )
 
-func RunTodayServer() {
-	fmt.Println("Starting server on 8100")
-	exit(runAPI(":8100"))
+func RunTodayServer(bindAddr string) {
+	fmt.Printf("Starting server on http://%s\n", bindAddr)
+	exit(runAPI(bindAddr))
 }
 
 func exit(err error) {
@@ -48,7 +48,7 @@ func buildApiService(router martini.Router) http.Handler {
 
 	m := martini.New()
 
-  m.Use(martini.Static("public"))
+	m.Use(martini.Static("public"))
 	m.Action(router.Handle)
 
 	return m

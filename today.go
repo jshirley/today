@@ -104,8 +104,15 @@ func main() {
 		},
 		{
 			Name: "server",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "bind, b",
+					Usage: "bind address, defaults to :8100",
+					Value: "0.0.0.0:8100",
+				},
+			},
 			Action: func(c *cli.Context) {
-				server.RunTodayServer()
+				server.RunTodayServer(c.String("bind"))
 			},
 		},
 	}
