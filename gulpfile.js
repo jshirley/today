@@ -1,13 +1,15 @@
-var browserify = require('browserify');
 var gulp = require('gulp');
-var source = require("vinyl-source-stream");
-var reactify = require('reactify');
+var source = require('vinyl-source-stream');
+var browserify = require('browserify');
+
+gulp.task('watch', function(){
+    gulp.watch(["./public/**/*.jsx", "!./public/javascript/bundle.js"], ["browserify"]);
+});
 
 gulp.task('browserify', function() {
-  var b = browserify();
-  b.transform(reactify); // use the reactify transform
-  b.add('./public/javascript/main.js');
-  return b.bundle()
-  .pipe(source('main.js'))
-  .pipe(gulp.dest('./public/dist'));
+    var bundleStream = browserify('./public/javascript/today.jsx')
+      .transform('reactify')
+      .bundle()
+      .pipe(source('bundle.js'));
+      return bundleStream.pipe(gulp.dest('./public/javascript/dist'));
 });
