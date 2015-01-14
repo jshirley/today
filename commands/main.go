@@ -6,14 +6,25 @@ import (
 	"github.com/russross/blackfriday"
 )
 
+func DisplayEntry(entry models.Entry) {
+	fmt.Println(entry.Title)
+	fmt.Println(string(blackfriday.MarkdownBasic([]byte(entry.Note))))
+}
+
+func DisplayNote(entry models.Note) {
+	fmt.Println(entry.Title)
+	fmt.Println(string(blackfriday.MarkdownBasic([]byte(entry.Note))))
+}
+
 func DisplayReview() {
 	entries := models.EntriesForToday()
-	fmt.Println("Got entries?", entries)
+	for _, entry := range entries {
+		DisplayEntry(entry)
+	}
 
 	notes := models.NotesForToday()
 	for _, note := range notes {
-		fmt.Println(note.Title)
-		fmt.Println(string(blackfriday.MarkdownBasic([]byte(note.Note))))
+		DisplayNote(note)
 	}
 
 }
