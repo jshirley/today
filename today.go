@@ -2,11 +2,11 @@ package main
 
 import (
 	//"flag"
+	"errors"
 	"fmt"
 	"github.com/codegangsta/cli"
 	"github.com/inconshreveable/axiom"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/russross/blackfriday"
 	"strings"
 	//"log"
 	"os"
@@ -46,20 +46,7 @@ func main() {
 		{
 			Name: "review",
 			Action: func(c *cli.Context) {
-				// May be a date?
-				//argsWithoutFlags := c.Args()
-				entries := models.EntriesForToday()
-				fmt.Println("Got entries?", entries)
-
-				notes := models.NotesForToday()
-				for _, note := range notes {
-					fmt.Println(note.Title)
-					fmt.Println(string(blackfriday.MarkdownBasic([]byte(note.Note))))
-				}
-
-				//entries := models.EntriesForToday()
-				//fmt.Println("Got entries? %v", entries)
-				//fmt.Println(argsWithoutFlags)
+				commands.DisplayReview()
 			},
 		},
 		{
@@ -67,7 +54,7 @@ func main() {
 			Action: func(c *cli.Context) {
 				argsWithoutFlags := c.Args()
 				if len(argsWithoutFlags) > 0 {
-					models.AddEntryForToday("must", strings.Join(argsWithoutFlags, " "))
+					models.AddEntryForToday("must", strings.Join(argsWithoutFlags, " "), "")
 				}
 			},
 		},
@@ -75,6 +62,14 @@ func main() {
 			Name: "should",
 			Action: func(c *cli.Context) {
 				fmt.Println("should do stuff, can this take trailing arguments?")
+			},
+		},
+		{
+			Name:  "do",
+			Flags: messageFlag,
+			Action: func(c *cli.Context) {
+				entry, message := extractEntryAndMessage(c)
+				models.AddEntryForToday("", entry, message)
 			},
 		},
 		{
@@ -122,4 +117,24 @@ func main() {
 
 	//TODO: add axiom.VersionCommand()
 	app.Run(os.Args)
+}
+
+func extractEntryAndMessage(c *cli.Context) (string, string) {
+	argsWithoutFlags := c.Args()
+	if len(argsWithoutFlags) == 0 {
+		abort(c, errors.New("must specify an message, such as `today do take out the trash`"))
+	}
+	entry := strings.Join(argsWithoutFlags, " ")
+
+	message := ""
+	if c.Bool("message") == true {
+		message = models.MessageFromEditor()
+	}
+	return entry, message
+}
+
+func abort(c *cli.Context, err error) {
+	cli.ShowCommandHelp(c, c.Command.Name)
+	fmt.Println("Command error:", err)
+	os.Exit(1)
 }

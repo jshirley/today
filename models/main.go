@@ -118,8 +118,8 @@ func CreateEntry(category string, entry string, note string, completed bool) Ent
 	}
 }
 
-func AddEntryForToday(category string, entry string) {
-	entity := CreateEntry(category, entry, "", false)
+func AddEntryForToday(category string, entry string, note string) {
+	entity := CreateEntry(category, entry, note, false)
 
 	err := dbMap.Insert(&entity)
 	checkErr(err, "Unable to save entry for today")
