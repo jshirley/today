@@ -5,33 +5,14 @@ import (
 	"fmt"
 	"github.com/coopernurse/gorp"
 	_ "github.com/mattn/go-sqlite3"
+	log "gopkg.in/inconshreveable/log15.v2"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"time"
 )
 
 var dbMap = initDb()
-
-type Entry struct {
-	Id        int64  `db:"id"`
-	Created   string `db:"created_at"`
-	Category  string
-	Title     string
-	Note      string
-	Completed bool
-	Sentiment int64
-}
-
-type Note struct {
-	Id        int64  `db:"id"`
-	Created   string `db:"created_at"`
-	Title     string
-	Note      string
-	Sentiment int64
-}
 
 func MessageFromEditor() string {
 	file, err := ioutil.TempFile(os.TempDir(), "today-")
@@ -74,82 +55,6 @@ func NewDatabase() {
 	checkErr(err, "Truncate Tables failed")
 }
 
-func EntriesForDate(date string) []Entry {
-	var entries []Entry
-
-	log.Println("Fetching entries for ", date)
-	_, err := dbMap.Select(&entries, "SELECT * FROM entries WHERE DATE(created_at, 'localtime') = ?", date)
-	checkErr(err, "Unable to select entries")
-
-	log.Println("Got results? ", len(entries))
-
-	return entries
-}
-
-func EntriesForToday() []Entry {
-	today := time.Now()
-	return EntriesForDate(today.Format("2006-01-02"))
-}
-
-func NotesForDate(date string) []Note {
-	var notes []Note
-
-	_, err := dbMap.Select(&notes, "SELECT * FROM notes WHERE DATE(created_at, 'localtime') = ?", date)
-	checkErr(err, "Unable to select notes")
-
-	log.Println("Got results? ", len(notes))
-
-	return notes
-}
-
-func NotesForToday() []Note {
-	today := time.Now()
-	return NotesForDate(today.Format("2006-01-02"))
-}
-
-func CreateEntry(category string, entry string, note string, completed bool) Entry {
-	return Entry{
-		Created:   time.Now().Format(time.RFC3339Nano),
-		Category:  category,
-		Title:     entry,
-		Note:      note,
-		Completed: completed,
-		Sentiment: 0,
-	}
-}
-
-func AddEntryForToday(category string, entry string, note string) {
-	entity := CreateEntry(category, entry, note, false)
-
-	err := dbMap.Insert(&entity)
-	checkErr(err, "Unable to save entry for today")
-
-	log.Println("Saved entity into the database")
-}
-
-func AddCompletedEntryForToday(category string, entry string, note string) {
-	entity := CreateEntry(category, entry, note, true)
-
-	err := dbMap.Insert(&entity)
-	checkErr(err, "Unable to save entry for today")
-
-	log.Println("Saved entity into the database")
-}
-
-func AddNoteForToday(title string, entry string) {
-	entity := Note{
-		Created:   time.Now().Format(time.RFC3339Nano),
-		Title:     title,
-		Note:      entry,
-		Sentiment: 0,
-	}
-
-	err := dbMap.Insert(&entity)
-	checkErr(err, "Unable to save note for today")
-
-	log.Println("Saved entity into the database")
-}
-
 func appRoot() string {
 	root := filepath.Join(os.Getenv("HOME"), ".today")
 	os.Mkdir(root, 0776)
@@ -177,6 +82,6 @@ func initDb() *gorp.DbMap {
 
 func checkErr(err error, msg string) {
 	if err != nil {
-		log.Fatalln(msg, err)
+		log.Crit(msg, "models", err)
 	}
 }
