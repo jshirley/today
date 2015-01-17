@@ -15,20 +15,19 @@ type Entry struct {
 	Sentiment int64
 }
 
-func EntriesForDate(date string) []Entry {
+func EntriesForDate(date time.Time) []Entry {
 	var entries []Entry
 
-	_, err := dbMap.Select(&entries, "SELECT * FROM entries WHERE DATE(created_at, 'localtime') = ?", date)
+	_, err := dbMap.Select(&entries, "SELECT * FROM entries WHERE DATE(created_at, 'localtime') = ?", date.Format("2006-01-02"))
 	checkErr(err, "Unable to select entries")
 
-	log.Info("entry count for date", "models", len(entries), "date", date)
+	log.Debug("entry count for date", "models", len(entries), "date", date)
 
 	return entries
 }
 
 func EntriesForToday() []Entry {
-	today := time.Now()
-	return EntriesForDate(today.Format("2006-01-02"))
+	return EntriesForDate(time.Now())
 }
 
 func CreateEntry(category string, entry string, note string, completed bool) Entry {
