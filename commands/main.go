@@ -9,28 +9,42 @@ import (
 	//log "gopkg.in/inconshreveable/log15.v2"
 )
 
-func DisplayReview() {
+func DisplayReview(timeframe string) {
 	today := time.Now()
 	today_string := today.Format(time.RFC1123)
 
 	yesterday := today.AddDate(0, 0, -1)
-	entries := models.EntriesForDate(yesterday)
 
-	terminal.Stdout.Color("w").
-		Print("It is ", today_string, " and it's time to plan!").Nl()
-
+	entries := models.EntriesForToday()
 	if len(entries) == 0 {
-		terminal.Stdout.Color("r").
-			Print("Yesterday was ", yesterday.Format(time.RFC1123), ".").Nl().
-			Print("- Nothing was planned yesterday, nothing to review today -").Nl()
+		entries = models.EntriesForDate(yesterday)
+
+		if len(entries) > 0 {
+			terminal.Stdout.Color("g").
+				Print("Yesterday", yesterday.Format(time.RFC1123), " you wanted to get this done:").Nl()
+			for _, entry := range entries {
+				DisplayEntry(entry)
+			}
+		} else {
+			terminal.Stdout.Color("g").
+				Print("It is ", today_string, " and it's time to plan!").Nl()
+		}
 	} else {
-		terminal.Stdout.Color("g").
-			Print("Review what's been done and what needs to be done:").Nl()
-		for _, entry := range entries {
-			DisplayEntry(entry)
+		entries := models.EntriesForDate(yesterday)
+
+		if len(entries) == 0 {
+			terminal.Stdout.Color("r").
+				Print("Today is ", today_string, " and it is time to plan!").Nl().
+				Color("w").
+				Print("Use `must`, `should`, or `want` to track what you hope to get done today.").Nl()
+		} else {
+			terminal.Stdout.Color("w").
+				Print("It is ", today_string, " and here's what to do:").Nl()
+			for _, entry := range entries {
+				DisplayEntry(entry)
+			}
 		}
 	}
-
 	notes := models.NotesForToday()
 	if len(notes) > 0 {
 		terminal.Stdout.Color("y").

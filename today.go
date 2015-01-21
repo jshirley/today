@@ -39,14 +39,19 @@ func main() {
 	}
 
 	app.Action = func(c *cli.Context) {
-		commands.DisplayReview()
+		commands.DisplayReview("today")
 	}
 
 	app.Commands = []cli.Command{
 		{
 			Name: "review",
 			Action: func(c *cli.Context) {
-				commands.DisplayReview()
+				timeframe := "today"
+				argsWithoutFlags := c.Args()
+				if len(argsWithoutFlags) > 0 {
+					timeframe = strings.Join(argsWithoutFlags, " ")
+				}
+				commands.DisplayReview(timeframe)
 			},
 		},
 		{
